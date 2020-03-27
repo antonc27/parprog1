@@ -40,22 +40,68 @@ object ParallelParenthesesBalancing extends ParallelParenthesesBalancingInterfac
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
    */
   def balance(chars: Array[Char]): Boolean = {
-    ???
+    @scala.annotation.tailrec
+    def recBalance(chars: List[Char], balance: Int): Boolean =
+      chars match {
+        case Nil => balance == 0
+        case x :: xs => x match {
+          case '(' => recBalance(xs, balance + 1)
+          case ')' => if (balance == 0) {
+            false
+          } else {
+            recBalance(xs, balance - 1)
+          }
+          case _ => recBalance(xs, balance)
+        }
+      }
+
+    recBalance(chars.toList, 0)
   }
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
    */
   def parBalance(chars: Array[Char], threshold: Int): Boolean = {
 
-    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int) /*: ???*/ = {
-      ???
+    def traverse(from: Int, until: Int): (Int, Int) = {
+      var unbalancedFromLeft = 0
+      var unbalancedFromRight = 0
+      var idx = from
+      while (idx < until) {
+        chars(idx) match {
+          case ')' => if (unbalancedFromRight > 0) {
+            unbalancedFromRight -= 1
+          } else {
+            unbalancedFromLeft += 1
+          }
+          case '(' =>
+            unbalancedFromRight += 1
+          case _ =>
+        }
+
+        idx += 1
+      }
+      (unbalancedFromLeft, unbalancedFromRight)
     }
 
-    def reduce(from: Int, until: Int) /*: ???*/ = {
-      ???
+    def reduce(from: Int, until: Int): (Int, Int) = {
+      if (until - from <= threshold) {
+        traverse(from, until)
+      } else {
+        val mid = from + (until - from) / 2
+        val ((l1, r1), (l2, r2)) = parallel(reduce(from, mid), reduce(mid, until))
+
+        val diff = r1 - l2
+        if (diff > 0) {
+          (l1, r2 + diff)
+        } else if (diff < 0) {
+          (l1 - diff, r2)
+        } else {
+          (l1, r2)
+        }
+      }
     }
 
-    reduce(0, chars.length) == ???
+    reduce(0, chars.length) == (0, 0)
   }
 
   // For those who want more:
